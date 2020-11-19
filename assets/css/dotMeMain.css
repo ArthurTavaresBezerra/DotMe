@@ -1,0 +1,202 @@
+
+body {
+  font-family: system, -apple-system, '.SFNSText-Regular', 'SF UI Text', 'Lucida Grande', 'Segoe UI', Ubuntu, Cantarell, sans-serif;
+  color: #fff;
+  background-color: #224f98c9;
+  text-align: center;
+  font-size: 12px;
+  overflow: hidden;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+
+body.timer-mode {
+  color: rgba(255, 255, 255, 0.514);
+  background-color: #224f981a;
+}
+
+#sideBarTime{
+  margin-top: 10px;
+}
+
+#timer {
+  color: white;
+  opacity: 0.7;
+  position: relative;
+  left: 0px;
+  top: 44px;
+  width: 70px;
+  height: 0px;
+  font-size: 21px;
+  text-decoration: none;
+  transform: rotate(90deg);
+  font-weight: bold;
+}
+
+
+#txtRegistration{
+  width: 100px;
+}
+
+.input {
+  align-self: flex-start;
+  margin-right: 0.5em;
+  border: 2px solid;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 1.2em;
+  font-weight: 500;
+  color: #00000099;
+  background-color: #ffffffaa;
+  text-align: center;
+}
+
+.button {
+  align-self: flex-start;
+  margin-right: 1em;
+  border: 2px solid;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 1.2em;
+  padding: .4em 1.2em;
+  color: inherit;
+  background-color: transparent;
+}
+
+#inputs {
+  padding: 12px 12px 9px 5px;
+  margin-top: 10px;
+  background-color: rgba(255, 255, 255, 0.541);
+  border-top-right-radius: 40px;
+  border-bottom-right-radius: 40px;
+}
+
+#dvImgCaptcha{
+  margin-bottom: 2px;
+  display: flex;
+  text-align:left;  
+  cursor: zoom-in;
+}
+
+#imgCaptcha{
+  width: 65px;
+  height: 27px;  
+  margin-top: 4px;
+  border-radius: 4px 4px 4px 4px;
+}
+
+#txt3FirstDigitsCpf{
+  width: 60px;
+  border-top-right-radius: 50px;
+}
+
+.input:focus {
+  border-color: #224f98;
+  outline: #000 auto 0px !important;
+}
+
+#txtCapctha{
+  margin-left: 0.5em;
+  margin-top: 4px;
+  width:95px;
+  display: block;
+  border-bottom-right-radius: 50px;
+}
+
+#txtPersonalData{
+  display: flex;
+}
+
+#btnDoDot{
+  display: inline-block;
+  border-bottom:none;  
+  width: 74px;
+  border-top-left-radius: 40px;
+  border-bottom-left-radius: 40px;
+}
+
+#form{
+  display: flex;
+}
+
+#dvDoDot{
+  display: inline-block;
+  padding: 12px -1px 9px 5px;
+  margin-top: 10px;
+  background-color: #224f98;
+  border-top-left-radius: 40px;
+  border-bottom-left-radius: 40px;
+  margin-left: 10px;
+}
+
+#btnDoDot img{
+  height: auto;
+  width: 58px;
+  margin-top: 6px;
+}
+
+#dvDoDot:hover{
+  color: #fff;
+  background-color: #15356db0;
+}
+
+#about{
+  position: absolute;
+  bottom:2px;
+  left: 75px;
+}
+
+#imgLogo{
+  height: auto;
+  width: 130px;
+}
+
+#author{
+  margin-top: 9px;
+  width: auto;
+  font-size: 8px;
+  font-weight:  100;
+  color: rgb(211, 205, 205);
+}
+
+#interaction{
+  height: 19px;
+}
+
+#response-error{
+  font-size: 13px;
+  color: #bbbbbb;
+  font-weight: bolder;
+}
+
+.hidden{
+  display: none !important;
+}
+
+#menuFloating{
+  position: absolute;
+  bottom: 0px;
+  right: 3px;
+}
+
+#btnShow {
+  width: auto;
+  height: auto;
+}
+
+#btnShow img, #btnHide img{
+  width: 20px;
+  height: auto;
+}
+
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#loader{
+  margin-left: 8px;
+  margin-top: 10px;
+  height: 50px;
+}
