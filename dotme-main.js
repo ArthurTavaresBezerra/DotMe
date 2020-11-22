@@ -1,26 +1,31 @@
-console.log("dotme-main.js - log")
-
 window.$ = window.jQuery = require('jquery');
 const { getCaptcha, dotMe } = require("./dotme-service-portal");
 const remote = require('electron').remote;
 const currentWindow = remote.getCurrentWindow();
 const ipcRenderer = require('electron').ipcRenderer
+const {BrowserWindow, screen} = require('electron').remote
+const path = require('path');
 
 const widthWindow = 276;
 const heightWindow = 200;
- 
 
 window.onload = function(){
     currentWindow.setIgnoreMouseEvents(false);
     addEventClickOnBtnShowAndHide();
+    addEventClickOnImgCaptcha();
     showSideBarMain(widthWindow, heightWindow);
     addEventClickOnBtnDoDot();
 }
 
-async function loadCaptcha(){
+async function loadCaptcha(fromWindowIdCaptcha){
     let imgCaptcha = document.getElementById("imgCaptcha");
     let captchaImg = await getCaptcha();
     imgCaptcha.setAttribute("src", captchaImg);
+
+    if (fromWindowIdCaptcha){
+        const fromWindow = BrowserWindow.fromId(fromWindowIdCaptcha)
+        fromWindow.webContents.send('send-window-source', currentWindow.id, captchaImg); 
+    }
 }
 
 function addEventClickOnBtnShowAndHide(){
@@ -30,16 +35,40 @@ function addEventClickOnBtnShowAndHide(){
     });
 }
 
+function addEventClickOnImgCaptcha(){
+    var imgCaptcha = document.getElementById('imgCaptcha');
+    imgCaptcha.addEventListener('click', () => {
+        openModalCaptcha();
+    });    
+}
+
+function openModalCaptcha() {
+    const modalPath = path.join('file://', __dirname, './dotMeModalCaptcha.html')
+    let win = new BrowserWindow({ 
+          width: 320, minWidth: 320, height: 150, transparent: true, frame: false, alwaysOnTop: true, 
+          visibleOnAllWorkspaces: true, titleBarStyle: 'Captcha',  skipTaskbar: true, webPreferences: {nodeIntegration: true}
+      });
+
+      let imgCaptcha = $("#imgCaptcha").attr("src");
+
+      win.webContents.on('did-finish-load', () => {
+          win.webContents.send('send-window-source', currentWindow.id, imgCaptcha);
+      });
+  
+ //     win.on('close', () => { win = null })
+      win.loadURL(modalPath)
+      win.show()
+  }  
+
 function onClickBtnShow(){
-    openModalOpenMain();
+    openModalGhost();
     currentWindow.setIgnoreMouseEvents(true, {forward: true});
-    var btnShow = document.getElementById('btnShow');
-    hideComponents(btnShow);
+    hideMainComponents(btnShow);
+    currentWindow.webContents.send('send-reset-timer', {});
 }
 
 function addEventClickOnBtnDoDot(){
     var btnDoDot = document.getElementById('btnDoDot');
-
 
     btnDoDot.addEventListener('click', async () => {
         showLoad();
@@ -51,12 +80,11 @@ function addEventClickOnBtnDoDot(){
         dotMe(txtRegistration, txt3FirstDigitsCpf, txtCapctha).then((responseDotMe)=>{
             if (responseDotMe.success === true) {
                 showMessageError(responseDotMe.msg.msg);
-                setTimeout(onClickBtnShow, 2000);
+                setTimeout(onClickBtnShow, 1000);
             }
             else {
                 showMessageError(responseDotMe.error);
-                loadCaptcha();
-                setTimeout(hideLoad, 2000);
+                hideLoad();
             }    
         });
      });
@@ -83,8 +111,8 @@ function hideLoad(){
     document.getElementById("load-heart").classList.add("hidden");
 }
 
-function hideComponents(){
-        var btnShow = document.getElementById('btnShow');
+function hideMainComponents(){
+    var btnShow = document.getElementById('btnShow');
     var sideBarMain = document.getElementById('sideBarMain');
     var sideBarTime = document.getElementById('sideBarTime');
     btnShow.classList.add("hidden");        
@@ -92,7 +120,7 @@ function hideComponents(){
     sideBarTime.classList.remove("hidden");
 }
 
-function showComponents(){
+function showMainComponents(){
     var btnShow = document.getElementById('btnShow');
     var sideBarMain = document.getElementById('sideBarMain');
     var sideBarTime = document.getElementById('sideBarTime');
@@ -102,34 +130,17 @@ function showComponents(){
     currentWindow.setIgnoreMouseEvents(false);
 }
   
-const {BrowserWindow, screen} = require('electron').remote
-const path = require('path');
-const { reporters } = require("mocha");
-
-function openModalOpenMain() {
-  const modalPath = path.join('file://', __dirname, './dotMeTimer.html')
+function openModalGhost() {
+  const modalPath = path.join('file://', __dirname, './dotMeModalGhost.html')
   let win = new BrowserWindow({ 
-        width: 35,
-        minWidth: 35,
-        height: 21,
-        webPreferences: {
-        nodeIntegration: true
-        },
-        transparent: true, 
-        frame: false,      
-        alwaysOnTop: true,
-        visibleOnAllWorkspaces: true,
-        titleBarStyle: 'hidden',
-        resizable: false,
-        minimizable: false,
-        maximizable: false, 
-        fullscreenable: false,
-        isMovable: false
+        width: 35, minWidth: 35, height: 21, 
+        webPreferences: { nodeIntegration: true }, 
+        transparent: true,  frame: false, alwaysOnTop: true, visibleOnAllWorkspaces: true, titleBarStyle: 'hidden',
+        resizable: false, minimizable: false, maximizable: false, fullscreenable: false, isMovable: false, skipTaskbar: true
     });
 
     showSideBarMain(win.getSize()[0],120);
     setSizeAndPositionModalOpenMain(win);
-
 
     win.webContents.on('did-finish-load', () => {
         win.webContents.send('send-window-source', currentWindow.id);
@@ -158,46 +169,15 @@ function showSideBarMain(width, height){
     currentWindow.setPosition(widthDisplay-currentWindow.getSize()[0], currentWindow.getPosition()[1]);
     currentWindow.resizable = false;
     hideLoad();
-    showComponents();
+    showMainComponents();
     loadCaptcha();
     hideMessageError();
 }
 
-
 ipcRenderer.on('open-main', (event, args) => {
-    var btnShow = document.getElementById('btnShow');
     showSideBarMain(widthWindow, heightWindow);
 })
 
-
-//const {ipcMain, app, Menu, Tray} = require('electron')
-
-// let appIcon = null
-
-// ipcMain.on('remove-tray', () => {
-//   appIcon.destroy()
-// })
-
-// app.on('window-all-closed', () => {
-//   if (appIcon) appIcon.destroy()
-// })
-
-
- 
-    // const iconName = process.platform === 'win32' ? 'windows-icon.png' : 'iconTemplate.png'
-    // const iconPath = path.join(__dirname, iconName)
-    // appIcon = new Tray(iconPath)
-  
-    // const contextMenu = Menu.buildFromTemplate([{
-    //   label: 'Remove UI',
-    //   click: () => {
-    //     event.sender.send('tray-removed')
-    //   }
-    // }])
-  
-    // appIcon.setToolTip('DotMe Stefanini.')
-    // appIcon.setContextMenu(contextMenu)
- 
- 
-
-  
+ipcRenderer.on('refresh-captcha', (event, fromWindowId) => {
+    loadCaptcha(fromWindowId);
+})

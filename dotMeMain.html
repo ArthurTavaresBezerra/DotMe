@@ -23,7 +23,6 @@
         </div>
       </div>
       <div id="dvDoDot">
-        <div id="loader" class="lds-ripple hidden"><div></div><div></div></div>
         <a id="btnDoDot" class=""><img src="./assets/img/logo.png" /></a>
         <div id ="load-heart" class="lds-heart hidden"><img src="./assets/img/logo-stefanini.white.png" /></div>
       </div>
@@ -41,14 +40,19 @@
     </div>  
   </div>
   <div id="sideBarTime" class="hidden">
+    <img class="imgPlay hidden" src="./assets/img/play.png" />
+    <img class="imgPause hidden" src="./assets/img/pause.png" />
     <div id="timer" >03:43</div>
-    <div id="loader" class="lds-ripple "><div></div><div></div></div>
+    <div id="loader" class="lds-ripple hidden"><div></div><div></div></div>
   </div>
   <div id="menuFloating">
+    <img class="imgPlay hidden" src="./assets/img/play.png" />
+    <img class="imgPause hidden" src="./assets/img/pause.png" />
     <a id="btnShow" class=""><img src="./assets/img/ghost-close-white.png"/></a>
   </div>
   <script>
     require("./dotme-main");
+    require("./dotme-timer");
   </script>
 
 </body>

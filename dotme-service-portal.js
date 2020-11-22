@@ -1,6 +1,9 @@
 const axios = require('axios');
-const { cookie } = require('request');
+const { reporters } = require('mocha');
 window.$ = window.jQuery = require('jquery');
+const { InsertDot } = require("./dotme-repository");
+
+
 
 var session = require('electron').remote.session;
 var ses = session.fromPartition('persist:name');
@@ -69,60 +72,76 @@ async function requestCaptcha(){
     return res.data.urlcaptcha;   
 }
  
-
 async function dotMe(mat, cpf, txtCaptcha){
     
-    var settings = {
-        "url": "https://portalhoras.stefanini.com/.net/index.ashx/SaveTimmingEvent",
-        "method": "POST",
-        "timeout": 0,
-        "async": false,
-        "headers": {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        "data": {
-          "deviceID": "8002",
-          "eventType": "1",
-          "userName": mat,
-          "password": cpf,
-          "cracha": "",
-          "costCenter": "",
-          "leave": "",
-          "func": "1",
-          "captcha": txtCaptcha,
-          "tsc": "",
-          "sessionID": "0",
-          "selectedEmployee": "0",
-          "selectedCandidate": "0",
-          "selectedVacancy": "0",
-          "dtFmt": "d/m/Y,",
-          "tmFmt": "H:i:s",
-          "shTmFmt": "H:i",
-          "dtTmFmt": "d/m/Y H:i:s",
-          "language": "0",
-          "idEmployeeLogged": "0"
+    settings.data.userName = mat; 
+    settings.data.password = cpf;
+    settings.data.captcha = txtCaptcha;
+
+    // let response = $.ajax(settings).done(function (res) {
+    //     return res;
+    // });
+
+    const responsePortal = { success: true, msg:{ msg:"sad" } }; //=  getJsonThreatment(response.responseText);
+
+   if (responsePortal.success){
+        const responseDb = await InsertDot(mat, cpf, responsePortal.msg.msg);
+        if (responseDb){
+            return responseDb;
         }
-      };
-      
-    let response = $.ajax(settings).done(function (res) {
-        return res;
-    });
-
-    let data = response.responseText;
-    data = replaceAll(data, "success", '"success"');
-    data = replaceAll(data, "error", '"error"');
-    data = replaceAll(data, "msg", '"msg"');
-    data = replaceAll(data, "type", '"type"');
-    data = replaceAll(data, "time", '"time"');
-
-    return JSON.parse(data);
+    } 
+    
+     return responsePortal;
 }
 
 function replaceAll(string, search, replace) {
     return string.split(search).join(replace);
 }
+
+function getJsonThreatment(data){
+    data = replaceAll(data, "success", '"success"');
+    data = replaceAll(data, "error", '"error"');
+    data = replaceAll(data, "msg", '"msg"');
+    data = replaceAll(data, "type", '"type"');
+    data = replaceAll(data, "time", '"time"');
+    return JSON.parse(data);
+}
+
+const settings = {
+    "url": "https://portalhoras.stefanini.com/.net/index.ashx/SaveTimmingEvent",
+    "method": "POST",
+    "timeout": 0,
+    "async": false,
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "data": {
+      "deviceID": "8002",
+      "eventType": "1",
+      "userName": "",
+      "password": "",
+      "cracha": "",
+      "costCenter": "",
+      "leave": "",
+      "func": "1",
+      "captcha": "",
+      "tsc": "",
+      "sessionID": "0",
+      "selectedEmployee": "0",
+      "selectedCandidate": "0",
+      "selectedVacancy": "0",
+      "dtFmt": "d/m/Y,",
+      "tmFmt": "H:i:s",
+      "shTmFmt": "H:i",
+      "dtTmFmt": "d/m/Y H:i:s",
+      "language": "0",
+      "idEmployeeLogged": "0"
+    }
+  };
   
+
+ 
 module.exports = {
     getCaptcha, 
     dotMe
-  }
+}

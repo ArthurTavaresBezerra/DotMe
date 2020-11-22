@@ -1,33 +1,133 @@
-console.log("dotme-timer.js - log");
-
+window.$ = window.jQuery = require('jquery');
+const { getDotToday, processQtyHourWorked } = require("./dotme-repository");
+const { getToday } = require("./dotme-util")
 const ipc = require('electron').ipcRenderer
-const remote = require('electron').remote;
-const BrowserWindow = require('electron').remote.BrowserWindow
-const currentWindow =remote.getCurrentWindow();
+const DEZ_SEGUNDOS = 10000;
 
-let windowIdSource;
+let dotOfToday;
 
-window.onload = function(){
-    currentWindow.setIgnoreMouseEvents(false);
-    addEventClickOnBtnHide();
+
+setInterval(processTimer, DEZ_SEGUNDOS);
+
+async function reset(){
+
+    contTimerAlert  = 0;
+    document.getElementById("timer").innerText = ""; 
+    let txtRegistration = $("#txtRegistration").val();
+    let txt3FirstDigitsCpf = $("#txt3FirstDigitsCpf").val();
+    try {
+        dotOfToday = await getDotToday(txtRegistration, txt3FirstDigitsCpf);
+        processTimer();
+    }
+    catch(error){
+        console.log("error-timer-reset", error);
+    }
 }
 
-function addEventClickOnBtnHide(){
-    var btnHide = document.getElementById('btnHide');
-    console.log(currentWindow.getSize());
-    btnHide.addEventListener('click', () => {
-        
-        const fromWindow = BrowserWindow.fromId(windowIdSource)
-        fromWindow.webContents.send('open-main')    
-        console.log("close");
-        if (currentWindow.isDevToolsOpened()) {
-            currentWindow.closeDevTools();
+function processTimer(){
+
+    try {
+        if (dotOfToday){
+            let copyDotOfToday = copyDot(dotOfToday);
+            processQtyHourWorked(copyDotOfToday, {});
+            let time = getHoursAndMinutosFrom(copyDotOfToday.qtd_hora_total);
+            let timeFormatted = time.toLocaleString('en-GB', { hour: '2-digit', minute:'2-digit' }).replace(/\//g, '-');
+            document.getElementById("timer").innerText = timeFormatted; 
+            showLoad(copyDotOfToday.qtd_hora_total);
+            showPlayOrPause(copyDotOfToday.isPlay);
         }
-        currentWindow.close();
-    });
+        else {
+            document.getElementById("timer").innerText = "--:--"; 
+            showLoadWithoutStartWork();
+            showPlayOrPause();
+        }
+    }catch(error){
+        console.log("crash process timer",error);
+    }
 }
- 
-ipc.on('send-window-source', function (event, fromWindowId) {
-    console.log("send-window-source");
-    windowIdSource = fromWindowId;
+
+const showPlayOrPause = (isPlay) => {
+    let imgPlay = $(".imgPlay");
+    let imgPause = $(".imgPause");
+
+    if (isPlay){
+        imgPlay.removeClass("hidden");
+        imgPause.addClass("hidden");
+    }
+    else {
+        imgPlay.addClass("hidden");
+        imgPause.removeClass("hidden");
+    }
+}
+
+function copyDot(dot){
+    let copy = {};
+    copy.getDateBrowser = true;
+    copy.entrada1 = dot.entrada1;
+    copy.entrada2 = dot.entrada2;
+    copy.entrada3 = dot.entrada3;
+    copy.entrada4 = dot.entrada4;
+    copy.saida1 = dot.saida1;
+    copy.saida2 = dot.saida2;
+    copy.saida3 = dot.saida3;
+    copy.saida4 = dot.saida4;
+    return copy;
+}
+
+function getHoursAndMinutosFrom(hours){
+    let today = getToday();
+    const UMA_HORA = 1000 * 60 * 60;
+    today = new Date(today.getTime() + (UMA_HORA*hours));
+    return today;
+}
+
+let contTimerAlert  = 0;
+
+function showLoad(hours){
+
+    const TURNO_TRABALHO = 4;
+    const HORARIO_ALMOCO = 12
+    let now = new Date();
+
+    const isEstaPertoDoAlmoco = (now.getHours() == HORARIO_ALMOCO) || (now.getHours() == 11 && now.getMinutes() >= 55)
+    const isJATRABLHOU_TURNO = hours >= TURNO_TRABALHO;
+    const isJATRABLHOU_DIA = hours >= TURNO_TRABALHO*2;
+
+
+    let loader = document.getElementById("loader");
+
+    if ( (isEstaPertoDoAlmoco && isJATRABLHOU_TURNO) || isJATRABLHOU_DIA ){
+        contTimerAlert += 1;
+        loader.classList.remove("hidden");
+        if (contTimerAlert >= 6*5 ) loader.classList.add("red");
+    }
+    else {
+        loader.classList.add("hidden");
+        loader.classList.remove("red");
+    }
+}
+
+function showLoadWithoutStartWork(){
+
+    const HORARIO_INICIO = 8
+    let now = new Date();
+
+    const isJaEhHorarioDeInicio = (now.getHours() >= HORARIO_INICIO)
+    const isJaPassou30Minutos = isJaEhHorarioDeInicio && (now.getMinutes() > 30);
+    
+    if (isJaEhHorarioDeInicio ){
+        document.getElementById("loader").classList.remove("hidden");
+        if (isJaPassou30Minutos)
+            document.getElementById("loader").classList.add("red");
+    }
+    else {
+        document.getElementById("loader").classList.add("hidden");
+        document.getElementById("loader").classList.remove("red");
+    }
+}
+
+
+ipc.on('send-reset-timer', function (event, fromWindowId) {
+    console.log("send-reset-timer");
+    reset();
 })

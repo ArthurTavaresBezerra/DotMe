@@ -5,17 +5,33 @@ require('update-electron-app')({
 const path = require('path')
 const glob = require('glob')
 const {app, BrowserWindow, screen} = require('electron')
+const { Menu, Tray} = require('electron')
 
 const debug = /--debug/.test(process.argv[2])
 
-if (process.mas) app.setName('Electron APIs')
+if (process.mas) app.setName('DotMe Stefanini')
 
 let mainWindow = null
+let trayInstance = null
 
 function initialize () {
   makeSingleInstance()
 
   loadDemos()
+
+  function createTray(){
+    const iconPath = path.join(__dirname, "./assets/img/logo.ico");
+    trayInstance = new Tray(iconPath)
+    trayInstance.setToolTip('DotMe Stefanini.') 
+
+    const contextMenu = Menu.buildFromTemplate([{
+      label: 'Fechar',
+      click: () => {
+        mainWindow.close();
+      }
+    }])  
+    trayInstance.setContextMenu(contextMenu)
+  }
 
   function createWindow () {
     const windowOptions = {
@@ -34,9 +50,10 @@ function initialize () {
       resizable: false,
       minimizable: false,
       maximizable: false,
-      closable: false,
+      closable: true,
       fullscreenable: false,
-      isMovable: false
+      isMovable: false,
+      skipTaskbar: true
     }
 
     if (process.platform === 'linux') {
@@ -44,7 +61,6 @@ function initialize () {
     }
 
     mainWindow = new BrowserWindow(windowOptions)
-//    mainWindow.setIgnoreMouseEvents(true)
     mainWindow.loadURL(path.join('file://', __dirname, '/dotMeMain.html'))
 
     let display = screen.getPrimaryDisplay();
@@ -52,8 +68,7 @@ function initialize () {
     mainWindow.setPosition(width-mainWindow.getSize()[0], mainWindow.getPosition()[1]);
 
     if (debug) {
- //     mainWindow.webContents.openDevTools()
-      //mainWindow.maximize()
+      //mainWindow.webContents.openDevTools()
       require('devtron').install()
     }
 
@@ -63,10 +78,12 @@ function initialize () {
   }
 
   app.on('ready', () => {
-    createWindow()
+    createWindow();
+    createTray();
   })
 
   app.on('window-all-closed', () => {
+    if (trayInstance) trayInstance.destroy()
     if (process.platform !== 'darwin') {
       app.quit()
     }
@@ -74,18 +91,11 @@ function initialize () {
 
   app.on('activate', () => {
     if (mainWindow === null) {
-      createWindow()
+      createWindow(); 
     }
   })
 }
 
-// Make this app a single instance app.
-//
-// The main window will be restored and focused instead of a second window
-// opened when a person attempts to launch a second instance.
-//
-// Returns true if the current version of the app should quit instead of
-// launching.
 function makeSingleInstance () {
   if (process.mas) return
 
