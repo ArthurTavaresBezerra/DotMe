@@ -1,7 +1,7 @@
 const Op = require('sequelize').Op;
 const { Pessoa } = require('./model/Pessoa');
 const { PontoHora } = require('./model/PontoHora');
-const { getDateUTC, setToToday, getTodayUTC, getToday } = require("./dotme-util")
+const { getDateUTC, setToToday, getTodayUTC } = require("./dotme-util")
 
 async function InsertDot(mat, cpf, nome){    
     try {
@@ -103,40 +103,32 @@ function processQtyHourWorked(p, updating){
         if (p.getDateBrowser)
             newDate = new Date();
 
-
         if (isSaida4) { 
             p.saida4 = updating.saida4 = newDate;
-            p.isPlay = true;
             return;
         }
         if (isEntrada4) { 
             p.entrada4 = updating.entrada4 = newDate;
-            p.isPlay = true;
             return;
         }
         if (isSaida3) { 
             p.saida3 = updating.saida3 = newDate;
-            p.isPlay = true;
             return;
         }
         if (isEntrada3) { 
             p.entrada3 = updating.entrada3 = newDate;
-            p.isPlay = true;
             return;
         }
         if (isSaida2) { 
             p.saida2 = updating.saida2 = newDate;
-            p.isPlay = true;
             return;
         }
         if (isEntrada2) { 
             p.entrada2 = updating.entrada2 = newDate;
-            p.isPlay = true;
             return;
         }
         if (isSaida1) { 
             p.saida1 = updating.saida1 = newDate;
-            p.isPlay = true;
             return;
         }
     }

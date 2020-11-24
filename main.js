@@ -56,9 +56,9 @@ function initialize () {
       skipTaskbar: true
     }
 
-    if (process.platform === 'linux') {
-      windowOptions.icon = path.join(__dirname, '/assets/app-icon/png/512.png')
-    }
+//    if (process.platform === 'linux') {
+      windowOptions.icon = path.join(__dirname, '/assets/img/logo.png')
+  //  }
 
     mainWindow = new BrowserWindow(windowOptions)
     mainWindow.loadURL(path.join('file://', __dirname, '/dotMeMain.html'))

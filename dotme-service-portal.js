@@ -1,5 +1,4 @@
 const axios = require('axios');
-const { reporters } = require('mocha');
 window.$ = window.jQuery = require('jquery');
 const { InsertDot } = require("./dotme-repository");
 
@@ -78,11 +77,12 @@ async function dotMe(mat, cpf, txtCaptcha){
     settings.data.password = cpf;
     settings.data.captcha = txtCaptcha;
 
-    // let response = $.ajax(settings).done(function (res) {
-    //     return res;
-    // });
+    let response = $.ajax(settings).done(function (res) {
+        return res;
+    });
 
-    const responsePortal = { success: true, msg:{ msg:"sad" } }; //=  getJsonThreatment(response.responseText);
+//    const responsePortal = { success: true, msg:{ msg:"sad" } }; 
+    const responsePortal = getJsonThreatment(response.responseText);
 
    if (responsePortal.success){
         const responseDb = await InsertDot(mat, cpf, responsePortal.msg.msg);
@@ -99,12 +99,40 @@ function replaceAll(string, search, replace) {
 }
 
 function getJsonThreatment(data){
+
+//    {success: true, msg: {msg: "Server Error\nApA-002399 - A Senha não é válida\n<< Build: 3.13.1.8590 [26/06/2020 19:58:22] / SHA=4e8a063432907c2 >> [ TimeStamp: 23/11/2020 12:17:17 ]", type: 2, time: 4000}}
+//    {success: true, msg: {msg: "Server Error\nApA-007818 - Usuário / Senha inválidos\n<< Build: 3.13.1.8590 [26/06/2020 19:58:22] / SHA=4e8a063432907c2 >> [ TimeStamp: 23/11/2020 12:18:09 ]", type: 2, time: 4000}}
+
     data = replaceAll(data, "success", '"success"');
     data = replaceAll(data, "error", '"error"');
     data = replaceAll(data, "msg", '"msg"');
     data = replaceAll(data, "type", '"type"');
     data = replaceAll(data, "time", '"time"');
-    return JSON.parse(data);
+
+    let json = JSON.parse(data);
+
+    if ( json.success == true && json.msg.type == 2){ 
+        
+        let responseError = {
+            success: false,
+            error: json.msg.msg
+        };
+
+        if (responseError.error == "USER_DISABLED"){
+            responseError.error = "Usuário desabilitado ou inativo";
+        }
+
+        if (responseError.error.includes('Error')){
+            responseError.error = responseError.error.replace("Server Error\nApA-002399 - ", "");
+            responseError.error = responseError.error.replace("Server Error\nApA-007818 - ", "");
+            let endIndex = responseError.error.indexOf("\n<<");
+            responseError.error = responseError.error.substring(0, endIndex);
+        }
+
+        return responseError;
+    } 
+
+    return json;
 }
 
 const settings = {

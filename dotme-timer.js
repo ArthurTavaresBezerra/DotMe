@@ -1,6 +1,6 @@
 window.$ = window.jQuery = require('jquery');
-const { getDotToday, processQtyHourWorked } = require("./dotme-repository");
-const { getToday } = require("./dotme-util")
+const { getDotToday } = require("./dotme-repository");
+const { getToday, setToToday, getTodayUTC } = require("./dotme-util")
 const ipc = require('electron').ipcRenderer
 const DEZ_SEGUNDOS = 10000;
 
@@ -35,12 +35,18 @@ function processTimer(){
             document.getElementById("timer").innerText = timeFormatted; 
             showLoad(copyDotOfToday.qtd_hora_total);
             showPlayOrPause(copyDotOfToday.isPlay);
+            
+            if ( copyDotOfToday.data != getTodayUTC()){
+                reset();                
+            }
         }
         else {
             document.getElementById("timer").innerText = "--:--"; 
             showLoadWithoutStartWork();
             showPlayOrPause();
         }
+
+
     }catch(error){
         console.log("crash process timer",error);
     }
@@ -62,6 +68,7 @@ const showPlayOrPause = (isPlay) => {
 
 function copyDot(dot){
     let copy = {};
+    copy.data = dot.data;
     copy.getDateBrowser = true;
     copy.entrada1 = dot.entrada1;
     copy.entrada2 = dot.entrada2;
@@ -93,13 +100,12 @@ function showLoad(hours){
     const isJATRABLHOU_TURNO = hours >= TURNO_TRABALHO;
     const isJATRABLHOU_DIA = hours >= TURNO_TRABALHO*2;
 
-
     let loader = document.getElementById("loader");
 
     if ( (isEstaPertoDoAlmoco && isJATRABLHOU_TURNO) || isJATRABLHOU_DIA ){
         contTimerAlert += 1;
         loader.classList.remove("hidden");
-        if (contTimerAlert >= 6*5 ) loader.classList.add("red");
+        if (contTimerAlert >= 6*5 || isJATRABLHOU_DIA ) loader.classList.add("red");
     }
     else {
         loader.classList.add("hidden");
@@ -124,6 +130,59 @@ function showLoadWithoutStartWork(){
         document.getElementById("loader").classList.add("hidden");
         document.getElementById("loader").classList.remove("red");
     }
+}
+
+function processQtyHourWorked(p, updating){
+
+    if (p == null || p == undefined) return null;
+
+    function process (p, updating) {    
+        let isSaida4 = p.entrada1 && p.saida1 && p.entrada2 && p.saida2 && p.entrada3 && p.saida3 && p.entrada4 && (p.saida4 == null || p.saida4 == undefined);
+        let isSaida3 = p.entrada1 && p.saida1 && p.entrada2 && p.saida2 && p.entrada3 && (p.saida3 == null || p.saida3 == undefined);
+        let isSaida2 = p.entrada1 && p.saida1 && p.entrada2 && (p.saida2 == null || p.saida2 == undefined);
+        let isSaida1 = p.entrada1 && (p.saida1 == null || p.saida1 == undefined);
+
+        let newDate = new Date();
+
+        if (isSaida4) { 
+            p.saida4 = updating.saida4 = newDate;
+            p.isPlay = true;
+            return;
+        }
+        if (isSaida3) { 
+            p.saida3 = updating.saida3 = newDate;
+            p.isPlay = true;
+            return;
+        }
+        if (isSaida2) { 
+            p.saida2 = updating.saida2 = newDate;
+            p.isPlay = true;
+            return;
+        }
+        if (isSaida1) { 
+            p.saida1 = updating.saida1 = newDate;
+            p.isPlay = true;
+            return;
+        }
+    }
+
+    p.entrada1 = setToToday(p.entrada1); 
+    p.saida1 = setToToday(p.saida1); 
+    p.entrada2 = setToToday(p.entrada2); 
+    p.saida2 = setToToday(p.saida2); 
+    p.entrada3 = setToToday(p.entrada3); 
+    p.saida3 = setToToday(p.saida3); 
+    p.entrada4 = setToToday(p.entrada4); 
+    p.saida4 = setToToday(p.saida4);
+
+    process(p, updating);
+
+    var hour1 = p.entrada1 && p.saida1 ? Math.abs( p.saida1 - p.entrada1) / 36e5 : 0;  
+    var hour2 = p.entrada2 && p.saida2 ? Math.abs( p.saida2 - p.entrada2) / 36e5 : 0;  
+    var hour3 = p.entrada3 && p.saida3 ? Math.abs( p.saida3 - p.entrada3) / 36e5 : 0;  
+    var hour4 = p.entrada4 && p.saida4 ? Math.abs( p.saida4 - p.entrada4) / 36e5 : 0; 
+
+    p.qtd_hora_total = hour1 + hour2 + hour3 + hour4;
 }
 
 

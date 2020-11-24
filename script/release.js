@@ -39,14 +39,14 @@ function prepareAssets () {
   const outPath = path.join(__dirname, '..', 'out')
 
   const zipAssets = [{
-    name: 'electron-api-demos-mac.zip',
-    path: path.join(outPath, 'Electron API Demos-darwin-x64', 'Electron API Demos.app')
+    name: 'dotme-stefanini-mac.zip',
+    path: path.join(outPath, 'DotMe-Stefanini-darwin-x64', 'DotMe-Stefanini.app')
   }, {
-    name: 'electron-api-demos-windows.zip',
-    path: path.join(outPath, 'Electron API Demos-win32-ia32')
+    name: 'dotme-stefanini-windows.zip',
+    path: path.join(outPath, 'DotMe-Stefanini-win32-ia32')
   }, {
-    name: 'electron-api-demos-linux.zip',
-    path: path.join(outPath, 'Electron API Demos-linux-x64')
+    name: 'dotme-stefanini-linux.zip',
+    path: path.join(outPath, 'DotMe-Stefanini-linux-x64')
   }]
 
   return Promise.all(zipAssets.map(zipAsset)).then((zipAssets) => {
@@ -57,8 +57,8 @@ function prepareAssets () {
       name: 'ElectronAPIDemosSetup.exe',
       path: path.join(outPath, 'windows-installer', 'ElectronAPIDemosSetup.exe')
     }, {
-      name: `electron-api-demos-${version}-full.nupkg`,
-      path: path.join(outPath, 'windows-installer', `electron-api-demos-${version}-full.nupkg`)
+      name: `dotme-stefanini-${version}-full.nupkg`,
+      path: path.join(outPath, 'windows-installer', `dotme-stefanini-${version}-full.nupkg`)
     }])
   })
 }
@@ -89,7 +89,7 @@ function zipAsset (asset) {
 async function getOrCreateRelease () {
   const { data: releases } = await github.repos.listReleases({
     owner: 'electron',
-    repo: 'electron-api-demos',
+    repo: 'dotme-stefanini',
     per_page: 100,
     page: 1
   })
@@ -102,7 +102,7 @@ async function getOrCreateRelease () {
   console.log('Creating new draft release')
   const { data: release } = await github.repos.createRelease({
     owner: 'electron',
-    repo: 'electron-api-demos',
+    repo: 'dotme-stefanini',
     tag_name: `v${version}`,
     target_commitish: 'master',
     name: version,
@@ -158,7 +158,7 @@ function publishRelease (release) {
   console.log('Publishing release')
   return github.repos.updateRelease({
     owner: 'electron',
-    repo: 'electron-api-demos',
+    repo: 'dotme-stefanini',
     release_id: release.id,
     draft: false
   })

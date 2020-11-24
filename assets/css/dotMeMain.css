@@ -162,6 +162,7 @@ body.timer-mode {
 
 #interaction{
   height: 19px;
+  padding-top: 7px;
 }
 
 #response-error{

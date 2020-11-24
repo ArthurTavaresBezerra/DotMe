@@ -5,9 +5,22 @@ const currentWindow = remote.getCurrentWindow();
 const ipcRenderer = require('electron').ipcRenderer
 const {BrowserWindow, screen} = require('electron').remote
 const path = require('path');
+const Store = require('./store.js');
 
 const widthWindow = 276;
 const heightWindow = 200;
+const store = new Store({
+    configName: 'user-preferences',
+    defaults: {
+        lastUser: {
+            mat: "",
+            cpf: ""
+          }
+      }
+});
+
+let modalCapctha;
+let modalGhost;
 
 window.onload = function(){
     currentWindow.setIgnoreMouseEvents(false);
@@ -15,6 +28,20 @@ window.onload = function(){
     addEventClickOnImgCaptcha();
     showSideBarMain(widthWindow, heightWindow);
     addEventClickOnBtnDoDot();
+    loadBasicData();
+}
+
+currentWindow.on('close',(event) => {
+    if (modalCapctha)
+        modalCapctha.close();
+    if (modalGhost)
+        modalGhost.close();
+});
+
+function loadBasicData(){
+    let lastUser = store.get('lastUser') 
+    $("#txtRegistration").val(lastUser.mat);
+    $("#txt3FirstDigitsCpf").val(lastUser.cpf);
 }
 
 async function loadCaptcha(fromWindowIdCaptcha){
@@ -26,6 +53,7 @@ async function loadCaptcha(fromWindowIdCaptcha){
         const fromWindow = BrowserWindow.fromId(fromWindowIdCaptcha)
         fromWindow.webContents.send('send-window-source', currentWindow.id, captchaImg); 
     }
+    $("#txtCapctha").val("");
 }
 
 function addEventClickOnBtnShowAndHide(){
@@ -45,20 +73,22 @@ function addEventClickOnImgCaptcha(){
 function openModalCaptcha() {
     const modalPath = path.join('file://', __dirname, './dotMeModalCaptcha.html')
     let win = new BrowserWindow({ 
-          width: 320, minWidth: 320, height: 150, transparent: true, frame: false, alwaysOnTop: true, 
-          visibleOnAllWorkspaces: true, titleBarStyle: 'Captcha',  skipTaskbar: true, webPreferences: {nodeIntegration: true}
-      });
+        width: 320, minWidth: 320, height: 150, transparent: true, frame: false, alwaysOnTop: true, 
+        visibleOnAllWorkspaces: true, titleBarStyle: 'Captcha',  skipTaskbar: true, webPreferences: {nodeIntegration: true}
+    });
 
-      let imgCaptcha = $("#imgCaptcha").attr("src");
+    let imgCaptcha = $("#imgCaptcha").attr("src");
 
-      win.webContents.on('did-finish-load', () => {
-          win.webContents.send('send-window-source', currentWindow.id, imgCaptcha);
-      });
-  
- //     win.on('close', () => { win = null })
-      win.loadURL(modalPath)
-      win.show()
-  }  
+    win.webContents.on('did-finish-load', () => {
+        win.webContents.send('send-window-source', currentWindow.id, imgCaptcha);
+    });
+
+    win.loadURL(modalPath);
+    win.show();
+
+    modalCapctha;
+    modalGhost
+}  
 
 function onClickBtnShow(){
     openModalGhost();
@@ -81,6 +111,7 @@ function addEventClickOnBtnDoDot(){
             if (responseDotMe.success === true) {
                 showMessageError(responseDotMe.msg.msg);
                 setTimeout(onClickBtnShow, 1000);
+                store.set('lastUser', {mat: txtRegistration, cpf: txt3FirstDigitsCpf });
             }
             else {
                 showMessageError(responseDotMe.error);
