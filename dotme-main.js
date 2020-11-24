@@ -86,8 +86,7 @@ function openModalCaptcha() {
     win.loadURL(modalPath);
     win.show();
 
-    modalCapctha;
-    modalGhost
+    modalCapctha = win;
 }  
 
 function onClickBtnShow(){
@@ -180,6 +179,8 @@ function openModalGhost() {
     win.on('close', () => { win = null })
     win.loadURL(modalPath)
     win.show()
+
+    modalGhost = win;
 }
 
 function setSizeAndPositionModalOpenMain(win){

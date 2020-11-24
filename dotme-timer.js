@@ -11,13 +11,14 @@ setInterval(processTimer, DEZ_SEGUNDOS);
 
 async function reset(){
 
+    forceShowLoad();
     contTimerAlert  = 0;
     document.getElementById("timer").innerText = ""; 
     let txtRegistration = $("#txtRegistration").val();
     let txt3FirstDigitsCpf = $("#txt3FirstDigitsCpf").val();
     try {
         dotOfToday = await getDotToday(txtRegistration, txt3FirstDigitsCpf);
-        processTimer();
+        setTimeout(processTimer, 1000);
     }
     catch(error){
         console.log("error-timer-reset", error);
@@ -130,6 +131,11 @@ function showLoadWithoutStartWork(){
         document.getElementById("loader").classList.add("hidden");
         document.getElementById("loader").classList.remove("red");
     }
+}
+
+function forceShowLoad(){
+    document.getElementById("loader").classList.remove("hidden");
+    document.getElementById("loader").classList.remove("red");
 }
 
 function processQtyHourWorked(p, updating){
