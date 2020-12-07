@@ -6,6 +6,7 @@ const ipcRenderer = require('electron').ipcRenderer
 const {BrowserWindow, screen} = require('electron').remote
 const path = require('path');
 const Store = require('./store.js');
+const UM_MINUTO = 1000*60;
 
 const widthWindow = 276;
 const heightWindow = 200;
@@ -19,13 +20,28 @@ const store = new Store({
       }
 });
 
-let modalCapctha;
-let modalGhost;
+let modalCapctha = null;
+let modalGhost = null;
+
+
+setInterval(AwaylsOnTop, UM_MINUTO);
+
+screen.on('display-metrics-changed', (event, display, changedMetrics) => {
+    if (document.getElementById('sideBarMain').classList.contains("hidden")){
+        resizeSideBarMain(35,120);
+        if (modalGhost)
+            setSizeAndPositionModalOpenMain(modalGhost);
+    }
+    else {
+        resizeSideBarMain(widthWindow, heightWindow);
+    }
+});
 
 window.onload = function(){
     currentWindow.setIgnoreMouseEvents(false);
     addEventClickOnBtnShowAndHide();
     addEventClickOnImgCaptcha();
+    addEventEnterDowOnImgCaptcha();
     showSideBarMain(widthWindow, heightWindow);
     addEventClickOnBtnDoDot();
     loadBasicData();
@@ -70,23 +86,40 @@ function addEventClickOnImgCaptcha(){
     });    
 }
 
+function addEventEnterDowOnImgCaptcha(){
+    var txtCapctha = document.getElementById('txtCapctha');
+    txtCapctha.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter'){
+            onCLickBtnDoDot();
+        }
+    });    
+}
+
 function openModalCaptcha() {
-    const modalPath = path.join('file://', __dirname, './dotMeModalCaptcha.html')
-    let win = new BrowserWindow({ 
-        width: 320, minWidth: 320, height: 150, transparent: true, frame: false, alwaysOnTop: true, 
-        visibleOnAllWorkspaces: true, titleBarStyle: 'Captcha',  skipTaskbar: true, webPreferences: {nodeIntegration: true}
-    });
 
-    let imgCaptcha = $("#imgCaptcha").attr("src");
+    if (modalCapctha == null) 
+    {
+        const modalPath = path.join('file://', __dirname, './dotMeModalCaptcha.html')
+        let win = new BrowserWindow({ 
+            width: 320, minWidth: 320, height: 150, transparent: true, frame: false, alwaysOnTop: true, 
+            visibleOnAllWorkspaces: true, titleBarStyle: 'Captcha',  skipTaskbar: true, webPreferences: {nodeIntegration: true}
+        });
+    
+        let imgCaptcha = $("#imgCaptcha").attr("src");
+    
+        win.webContents.on('did-finish-load', () => {
+            win.webContents.send('send-window-source', currentWindow.id, imgCaptcha);
+        });
+    
+        win.loadURL(modalPath);
+        win.show();
+    
+        win.on('closed', ()=>{
+            modalCapctha = null;
+        });
+        modalCapctha = win;        
+    }
 
-    win.webContents.on('did-finish-load', () => {
-        win.webContents.send('send-window-source', currentWindow.id, imgCaptcha);
-    });
-
-    win.loadURL(modalPath);
-    win.show();
-
-    modalCapctha = win;
 }  
 
 function onClickBtnShow(){
@@ -100,7 +133,12 @@ function addEventClickOnBtnDoDot(){
     var btnDoDot = document.getElementById('btnDoDot');
 
     btnDoDot.addEventListener('click', async () => {
-        showLoad();
+        onCLickBtnDoDot();
+     });
+}
+
+function onCLickBtnDoDot(){
+    showLoad();
 
         let txtRegistration = $("#txtRegistration").val();
         let txt3FirstDigitsCpf = $("#txt3FirstDigitsCpf").val();
@@ -111,13 +149,14 @@ function addEventClickOnBtnDoDot(){
                 showMessageError(responseDotMe.msg.msg);
                 setTimeout(onClickBtnShow, 1000);
                 store.set('lastUser', {mat: txtRegistration, cpf: txt3FirstDigitsCpf });
+                if (modalCapctha)
+                    modalCapctha.close();
             }
             else {
                 showMessageError(responseDotMe.error);
                 hideLoad();
             }    
         });
-     });
 }
 
 function showMessageError(txt){
@@ -148,6 +187,8 @@ function hideMainComponents(){
     btnShow.classList.add("hidden");        
     sideBarMain.classList.add("hidden");
     sideBarTime.classList.remove("hidden");
+    $(".imgPlay").addClass("hidden");
+    $(".imgPause").addClass("hidden");
 }
 
 function showMainComponents(){
@@ -168,8 +209,9 @@ function openModalGhost() {
         transparent: true,  frame: false, alwaysOnTop: true, visibleOnAllWorkspaces: true, titleBarStyle: 'hidden',
         resizable: false, minimizable: false, maximizable: false, fullscreenable: false, isMovable: false, skipTaskbar: true
     });
+    modalGhost = win;
 
-    showSideBarMain(win.getSize()[0],120);
+    showSideBarMain(35,120);
     setSizeAndPositionModalOpenMain(win);
 
     win.webContents.on('did-finish-load', () => {
@@ -180,7 +222,6 @@ function openModalGhost() {
     win.loadURL(modalPath)
     win.show()
 
-    modalGhost = win;
 }
 
 function setSizeAndPositionModalOpenMain(win){
@@ -192,7 +233,7 @@ function setSizeAndPositionModalOpenMain(win){
     win.setPosition(width-win.getSize()[0], positionY);
 }
 
-function showSideBarMain(width, height){
+function resizeSideBarMain(width, height){
     currentWindow.resizable = true;
     let newWidth = width;
     currentWindow.setSize(newWidth, height);    
@@ -200,10 +241,35 @@ function showSideBarMain(width, height){
     let widthDisplay = display.bounds.width;
     currentWindow.setPosition(widthDisplay-currentWindow.getSize()[0], currentWindow.getPosition()[1]);
     currentWindow.resizable = false;
+}
+
+function showSideBarMain(width, height){
+    resizeSideBarMain(width, height);
     hideLoad();
     showMainComponents();
     loadCaptcha();
     hideMessageError();
+}
+
+function AwaylsOnTop(){
+    currentWindow.setAlwaysOnTop(false);
+    currentWindow.setVisibleOnAllWorkspaces(false);
+    currentWindow.setAlwaysOnTop(true);
+    currentWindow.setVisibleOnAllWorkspaces(true);
+    if (modalGhost){
+        modalGhost.setAlwaysOnTop(false);
+        modalGhost.setVisibleOnAllWorkspaces(false);
+        modalGhost.setAlwaysOnTop(true);
+        modalGhost.setVisibleOnAllWorkspaces(true);
+    }
+
+    // const notification = {
+    //   title: 'Notification with image',
+    //   body: 'Short message plus a custom image',
+    //   icon: path.join(__dirname, '../../../assets/img/programming.png')
+    // }
+    // const myNotification = new window.Notification(notification.title, notification)
+    // console.log(myNotification);
 }
 
 ipcRenderer.on('open-main', (event, args) => {

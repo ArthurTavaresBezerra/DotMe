@@ -1,11 +1,10 @@
 window.$ = window.jQuery = require('jquery');
 const { getDotToday } = require("./dotme-repository");
 const { getToday, setToToday, getTodayUTC } = require("./dotme-util")
-const ipc = require('electron').ipcRenderer
+const ipc = require('electron').ipcRenderer;
 const DEZ_SEGUNDOS = 10000;
 
 let dotOfToday;
-
 
 setInterval(processTimer, DEZ_SEGUNDOS);
 

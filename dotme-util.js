@@ -11,14 +11,19 @@ function getDateUTC(){
                    
 }
 
+function leftPad(value, totalWidth, paddingChar) {
+   var length = totalWidth - value.toString().length + 1;
+   return Array(length).join(paddingChar || '0') + value;
+};
+
 function getTodayUTC(){
    const now = getDateUTC();
    let retorno = "";
    retorno += now.getYear()+1900;
    retorno += "-";
-   retorno += now.getMonth()+1;
+   retorno += leftPad(now.getMonth()+1,2);
    retorno += "-";
-   retorno += now.getDate();
+   retorno += leftPad(now.getDate(),2);
    return retorno;
 }
 
@@ -34,9 +39,9 @@ function getToday() {
    let retorno = "";
    retorno += now.getYear()+1900;
    retorno += "-";
-   retorno += now.getMonth()+1;
+   retorno += leftPad(now.getMonth()+1,2);
    retorno += "-";
-   retorno += now.getDate();
+   retorno += leftPad(now.getDate(),2);
    retorno += " 00:00";
    return new Date(retorno);
 }
