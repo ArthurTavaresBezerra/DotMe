@@ -56,6 +56,7 @@
     "electron-log": "^2.2.14",
     "electron-settings": "^3.0.7",
     "electron-shortcut-normalizer": "^1.0.0",
+    "electron-squirrel-startup": "^1.0.0",
     "glob": "^7.1.0",
     "highlight.js": "^9.3.0",
     "jquery": "^3.5.1",
